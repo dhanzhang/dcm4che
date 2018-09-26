@@ -78,6 +78,7 @@ import org.dcm4che3.audit.AuditMessages.RoleIDCode;
 import org.dcm4che3.net.Connection;
 import org.dcm4che3.net.Device;
 import org.dcm4che3.net.IncompatibleConnectionException;
+import org.dcm4che3.util.ReverseDNS;
 import org.dcm4che3.util.SafeClose;
 import org.dcm4che3.util.StreamUtils;
 import org.dcm4che3.util.StringUtils;
@@ -189,6 +190,7 @@ public class AuditLogger {
 
     private String commonName;
     private Device arrDevice;
+    private String arrDeviceName;
     private Device device;
     private Facility facility = Facility.authpriv;
     private Severity successSeverity = Severity.notice;
@@ -256,16 +258,25 @@ public class AuditLogger {
         return arrDevice;
     }
 
-    public String getAuditRecordRepositoryDeviceName() {
-        if (arrDevice == null)
-            throw new IllegalStateException("AuditRecordRepositoryDevice not initialized");
-        return arrDevice.getDeviceName();
-    }
-
     public void setAuditRecordRepositoryDevice(Device arrDevice) {
         SafeClose.close(activeConnection);
         activeConnection = null;
         this.arrDevice = arrDevice;
+        this.arrDeviceName = arrDevice != null ? arrDevice.getDeviceName() : null;
+    }
+
+    public String getAuditRecordRepositoryDeviceName() {
+        return arrDeviceName;
+    }
+
+    public String getAuditRecordRepositoryDeviceNameNotNull() {
+        if (arrDeviceName == null)
+            throw new IllegalStateException("AuditRecordRepositoryDevice not initialized");
+        return arrDeviceName;
+    }
+
+    public void setAuditRecordRepositoryDeviceName(String arrDeviceName) {
+        this.arrDeviceName = arrDeviceName;
     }
 
     public final Facility getFacility() {
@@ -372,7 +383,7 @@ public class AuditLogger {
                 AuditMessages.alternativeUserIDForAETitle(
                         aets.toArray(new String[aets.size()])),
                 applicationName(),
-                localHost().getHostName(),
+                ReverseDNS.hostNameOf(localHost()),
                 roleIDs);
     }
 
@@ -659,7 +670,8 @@ public class AuditLogger {
         setSpoolFileNameSuffix(from.spoolFileNameSuffix);
         setRetryInterval(from.retryInterval);
         setInstalled(from.installed);
-        setAuditRecordRepositoryDevice(from.arrDevice);
+        arrDevice = from.arrDevice;
+        arrDeviceName = from.arrDeviceName;
         setAuditSuppressCriteriaList(from.suppressAuditMessageFilters);
         device.reconfigureConnections(conns, from.conns);
         closeActiveConnection();

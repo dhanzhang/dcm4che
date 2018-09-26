@@ -265,6 +265,16 @@ public class LdapUtils {
         return attrID + '=' + attrValue + ',' + parentDN;
     }
 
+    public static String cutAttrValueFromDN(String dn, String attrID) {
+        int beginIndex = dn.indexOf(attrID + '=');
+        if (beginIndex < 0)
+            return null;
+
+        beginIndex += attrID.length() + 1;
+        int endIndex = dn.indexOf(',', beginIndex);
+        return endIndex >= 0 ? dn.substring(beginIndex, endIndex) : dn.substring(beginIndex);
+    }
+
     public static String dnOf(String attrID1, String attrValue1,
             String attrID2, String attrValue2, String baseDN) {
         return attrID1 + '=' + attrValue1
@@ -538,4 +548,13 @@ public class LdapUtils {
             'U' , 'V' , 'W' , 'X' , 'Y' , 'Z'
     };
 
+    public static String cutDeviceName(String name) {
+        int start = name.indexOf("dicomDeviceName=");
+        if (start < 0)
+            return null;
+
+        start += 16;
+        int end = name.indexOf(',', start);
+        return end < 0 ? name.substring(start) : name.substring(start, end);
+    }
 }
